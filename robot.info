@@ -1,0 +1,136 @@
+{
+  // robot.info v0.1 — Peter Widget
+  //
+  // Structured product manifest for AI agents. Spec:
+  // mnemo-cortex/ROBOT-INFO-SPEC.md.
+  //
+  // Single JSON object, UTF-8. JavaScript-style // line comments are
+  // stripped before parsing.
+
+  "robot_info_version": "0.1",
+
+  "name": "Peter Widget",
+  "tagline": "Cartoon lobster on your site, powered by your own LLM stack — chat widget with per-visitor memory.",
+  "summary": "Peter Widget is the customer-facing chat widget for projectsparks.ai. A cheerful cartoon lobster named Peter answers visitor questions about Project Sparks products. The backend is a small Express server (~210 LOC) that routes chat through Sparks Router for model access and stores per-visitor memory in a dedicated Mnemo instance. Each visitor gets their own memory namespace so Peter remembers context across return visits without bleeding between users. Drop-in widget served from /rocky-widget.js.",
+  "version": "1.0.0",
+  "license": "MIT (intended)",
+  "homepage": "https://projectsparks.ai",
+  "source": "local (not currently published to GitHub — lives at ~/github/rocky-widget/ on the maintainer's machine)",
+  "contact": "guy@projectsparks.ai",
+  "maintainer": "Project Sparks",
+
+  "capabilities": [
+    "Embedded chat widget — drop one `<script src=\"/rocky-widget.js\">` tag on a page and the widget renders itself (button + chat overlay).",
+    "Peter persona — cheerful cartoon-lobster mascot with system-prompted product knowledge. Friendly, concise, sticks to verified product info.",
+    "Per-visitor memory namespaces via Mnemo — each visitor has their own agent_id slot (peter-widget-<visitor_id>). Peter remembers context across sessions without cross-visitor leakage.",
+    "Visitor profile recall — when chat starts, Peter pulls the last 5 memory snippets for that visitor and threads them into context.",
+    "Question logging — every visitor question goes into Mnemo with the visitor's namespace so the team can review what people are asking.",
+    "Visitor-facing privacy controls — /api/wipe-visitor lets a visitor delete their entire memory namespace on demand (GDPR-shaped right to erasure).",
+    "Product knowledge from local file — `~/peter-customer/knowledge/products.md` is loaded at startup; rules in the system prompt suppress products marked '(Retired)'.",
+    "Model-routed via Sparks Router — Peter's model choice (`x-ai/grok-4-fast` by default) goes through the router so model swaps are config, not code.",
+    "Graceful degradation — if Sparks Router is down, returns a polite 'I'm having a little trouble right now' instead of crashing or hanging."
+  ],
+
+  "exposes": {
+    "rest_api": {
+      "default_port": 50095,
+      "base_path": "/",
+      "endpoints": [
+        {"path": "/rocky-widget.js", "method": "GET", "purpose": "Serve the widget's JavaScript. Drop a `<script>` tag pointing here on any page."},
+        {"path": "/rocky-icon.svg", "method": "GET", "purpose": "Serve Peter's icon."},
+        {"path": "/api/chat", "method": "POST", "purpose": "Main chat endpoint. POST {messages, visitor_id}; returns {reply}. Routes through Sparks Router; loads visitor memory from Mnemo before answering."},
+        {"path": "/api/save-visitor", "method": "POST", "purpose": "Persist a visitor's profile snippet to their Mnemo namespace. POST {visitor_id, summary, key_facts}."},
+        {"path": "/api/log-question", "method": "POST", "purpose": "Log a visitor's question to Mnemo (so the team can review what people ask). POST {visitor_id, question}."},
+        {"path": "/api/recall/:visitor_id", "method": "GET", "purpose": "Pull the recent memory snippets for a specific visitor. Used internally + for debugging."},
+        {"path": "/api/wipe-visitor", "method": "POST", "purpose": "Erase a visitor's entire memory namespace. Visitor-initiated right-to-erasure. POST {visitor_id}."}
+      ]
+    },
+    "cli": [
+      {"command": "node server.js", "purpose": "Start the widget backend on port 50095."},
+      {"command": "npm start", "purpose": "Same — invokes node server.js per package.json scripts."}
+    ]
+  },
+
+  "install": {
+    "manual_docs": "(no public docs — local source at ~/github/rocky-widget/)",
+    "platforms": ["linux", "macos"],
+    "runtime": "node>=18",
+    "dependencies": ["express ^4.21.0", "cors ^2.8.5"],
+    "external_services_required": [
+      "Sparks Router on localhost:8100 (for chat completions; OpenAI-compatible /v1/chat/completions endpoint).",
+      "Mnemo Cortex instance on localhost:50002 (a separate customer-scoped Mnemo, not the main agent Mnemo).",
+      "Product knowledge markdown file at ~/peter-customer/knowledge/products.md.",
+      "Provider API key (e.g. OpenRouter) loaded from ~/.rockys-switch/keys.json (legacy path — being unified)."
+    ]
+  },
+
+  "compatibility": {
+    "host_sites": "Any HTML page that can include a `<script>` tag. Currently embedded on projectsparks.ai.",
+    "models": "Whatever Sparks Router is configured to route — defaults to x-ai/grok-4-fast. Any tool-capable or chat-capable LLM works.",
+    "protocols": ["HTTP REST (Express)", "OpenAI-compatible chat completions (via Sparks Router)"]
+  },
+
+  "privacy": {
+    "telemetry": "none",
+    "data_location": "All visitor memory is stored locally in Mnemo Cortex (port 50002) under per-visitor agent_id namespaces. No third-party analytics. No tracking pixels.",
+    "auth": "No auth on the public chat endpoint — visitors are anonymous. visitor_id is generated client-side and stored in localStorage. Visitor identity is opaque to the server.",
+    "outbound_calls": [
+      "Sparks Router on localhost:8100 — for chat completions. Sparks Router in turn calls the configured upstream (OpenRouter, etc.) to reach the actual model.",
+      "Mnemo Cortex on localhost:50002 — for visitor memory read/write."
+    ],
+    "visitor_rights": [
+      "Right to erasure: /api/wipe-visitor deletes the visitor's entire Mnemo namespace. Triggered visitor-side from the widget UI."
+    ]
+  },
+
+  "related": [
+    {"name": "Mnemo Cortex", "url": "https://github.com/GuyMannDude/mnemo-cortex", "purpose": "The memory backend Peter Widget reads + writes against. Peter uses a dedicated Mnemo instance on port 50002 separate from the agent-side Mnemo on 50001 for tenant isolation."},
+    {"name": "robot.info spec", "url": "https://github.com/GuyMannDude/mnemo-cortex/blob/master/ROBOT-INFO-SPEC.md", "purpose": "Schema specification for this manifest format."}
+  ],
+
+  "common_questions": [
+    {
+      "q": "What is Peter Widget?",
+      "a": "A chat widget that lives on projectsparks.ai. Peter — a cartoon lobster mascot — answers visitor questions about Project Sparks products. Each visitor gets their own memory namespace, so Peter remembers context across return visits without leaking between users."
+    },
+    {
+      "q": "Who is Peter?",
+      "a": "Peter is the Project Sparks mascot — a cheerful cartoon lobster. The persona is intentionally friendly + concise: 2-3 sentence answers, sticks to verified product info, doesn't speculate. He's named after a real Peter, not the developer."
+    },
+    {
+      "q": "Can I embed this on my own site?",
+      "a": "The widget JS itself is straightforward (~410 LOC), but the backend currently expects Sparks Router (port 8100) and a customer-scoped Mnemo (port 50002) on localhost, plus a Sparks-specific product knowledge file. It's not a generic chat widget yet — it's a Sparks deployment. Would need refactoring to be host-agnostic."
+    },
+    {
+      "q": "What model does Peter use?",
+      "a": "Currently x-ai/grok-4-fast, routed through Sparks Router (port 8100). The model is one config-line in server.js so swapping is trivial. Sparks Router handles upstream provider auth + retries."
+    },
+    {
+      "q": "Does Peter remember return visitors?",
+      "a": "Yes. Each visitor has a unique visitor_id (generated client-side, stored in localStorage). The backend stores their conversation summaries in Mnemo under a per-visitor agent_id namespace (peter-widget-<visitor_id>). On the next chat, Peter pulls the last 5 memory snippets and threads them into context before answering."
+    },
+    {
+      "q": "Is visitor data private?",
+      "a": "All visitor memory lives in a local Mnemo Cortex instance on the same machine — no third-party analytics, no tracking pixels, no cloud storage. Outbound model calls (through Sparks Router) go to whatever provider the router is configured for; the model receives only the conversation messages, not the visitor's identity."
+    },
+    {
+      "q": "Can a visitor delete their data?",
+      "a": "Yes. POST /api/wipe-visitor with their visitor_id (the widget UI exposes this as a button) erases their entire Mnemo namespace immediately. No retention, no soft-delete."
+    },
+    {
+      "q": "What happens if Sparks Router is down?",
+      "a": "Peter falls back to a polite degraded reply: 'I'm having a little trouble connecting right now. Try again in a moment, or email rocky@projectsparks.ai.' The widget stays up; the conversation flow doesn't break."
+    },
+    {
+      "q": "How does the product knowledge get updated?",
+      "a": "Edit ~/peter-customer/knowledge/products.md and restart the widget service. The product list is loaded into Peter's system prompt at startup. Products tagged '(Retired)' in the file are suppressed via an explicit prompt rule — Peter won't mention them."
+    },
+    {
+      "q": "Is the source public?",
+      "a": "Not at the time of writing — the source lives at ~/github/rocky-widget/ on the maintainer's machine but isn't pushed to GitHub yet. The repo name 'rocky-widget' is a historical leftover from when the persona was Rocky; it's the Peter Widget backend."
+    }
+  ],
+
+  "generated_at": "2026-05-13T20:15:00Z",
+  "spec_url": "https://github.com/GuyMannDude/mnemo-cortex/blob/master/ROBOT-INFO-SPEC.md"
+}

@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <radialGradient id="body" cx="50%" cy="40%" r="50%">
+      <stop offset="0%" stop-color="#e85040"/>
+      <stop offset="100%" stop-color="#c0302a"/>
+    </radialGradient>
+  </defs>
+  <!-- Body -->
+  <ellipse cx="50" cy="55" rx="30" ry="28" fill="url(#body)"/>
+  <!-- Head -->
+  <ellipse cx="50" cy="32" rx="22" ry="18" fill="url(#body)"/>
+  <!-- Eyes -->
+  <ellipse cx="42" cy="28" rx="5" ry="6" fill="white"/>
+  <ellipse cx="58" cy="28" rx="5" ry="6" fill="white"/>
+  <circle cx="43" cy="29" r="2.5" fill="#222"/>
+  <circle cx="59" cy="29" r="2.5" fill="#222"/>
+  <!-- Eye shine -->
+  <circle cx="44" cy="27" r="1" fill="white"/>
+  <circle cx="60" cy="27" r="1" fill="white"/>
+  <!-- Smile -->
+  <path d="M40 36 Q50 44 60 36" fill="none" stroke="#222" stroke-width="2" stroke-linecap="round"/>
+  <!-- Claws -->
+  <ellipse cx="14" cy="50" rx="10" ry="7" fill="#e85040" transform="rotate(-20 14 50)"/>
+  <ellipse cx="86" cy="50" rx="10" ry="7" fill="#e85040" transform="rotate(20 86 50)"/>
+  <!-- Claw pincers left -->
+  <path d="M6 44 Q2 40 6 36" fill="none" stroke="#c0302a" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- Claw pincers right -->
+  <path d="M94 44 Q98 40 94 36" fill="none" stroke="#c0302a" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- Arms -->
+  <path d="M22 52 Q18 50 14 50" fill="none" stroke="#c0302a" stroke-width="3"/>
+  <path d="M78 52 Q82 50 86 50" fill="none" stroke="#c0302a" stroke-width="3"/>
+  <!-- Antennae -->
+  <path d="M38 18 Q30 4 22 8" fill="none" stroke="#e85040" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M62 18 Q70 4 78 8" fill="none" stroke="#e85040" stroke-width="2.5" stroke-linecap="round"/>
+  <circle cx="22" cy="8" r="3" fill="#d4a82a"/>
+  <circle cx="78" cy="8" r="3" fill="#d4a82a"/>
+  <!-- Legs -->
+  <line x1="35" y1="78" x2="30" y2="92" stroke="#c0302a" stroke-width="3" stroke-linecap="round"/>
+  <line x1="50" y1="82" x2="50" y2="96" stroke="#c0302a" stroke-width="3" stroke-linecap="round"/>
+  <line x1="65" y1="78" x2="70" y2="92" stroke="#c0302a" stroke-width="3" stroke-linecap="round"/>
+  <!-- Belly highlight -->
+  <ellipse cx="50" cy="52" rx="16" ry="14" fill="rgba(255,255,255,0.1)"/>
+</svg>
