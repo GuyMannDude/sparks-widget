@@ -7,12 +7,12 @@
   // Single JSON object, UTF-8. JavaScript-style // line comments are
   // stripped before parsing.
 
-  "robot_info_version": "0.1",
+  "robot_info_version": "0.2",
 
   "name": "Peter Widget",
   "tagline": "Cartoon lobster on your site, powered by your own LLM stack — chat widget with per-visitor memory.",
   "summary": "Peter Widget is the customer-facing chat widget for projectsparks.ai. A cheerful cartoon lobster named Peter answers visitor questions about Project Sparks products. The backend is a small Express server (~210 LOC) that routes chat through Sparks Router for model access and stores per-visitor memory in a dedicated Mnemo instance. Each visitor gets their own memory namespace so Peter remembers context across return visits without bleeding between users. Drop-in widget served from /rocky-widget.js.",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "license": "MIT (intended)",
   "homepage": "https://projectsparks.ai",
   "source": "local (not currently published to GitHub — lives at ~/github/rocky-widget/ on the maintainer's machine)",
@@ -131,6 +131,63 @@
     }
   ],
 
-  "generated_at": "2026-05-13T20:15:00Z",
+  // ─── v0.2 user-facing layer ──────────────────────────────────────────
+  // Plain-language sections an AI reads to explain this widget to a
+  // non-developer — typically a small business owner who wants a chat
+  // assistant on their website. Written for the human, not the dev.
+
+  // Read when a user asks "what is this?" / "why would I use it?"
+  "why": "It puts a friendly AI chat assistant on your website — a little bubble in the corner visitors can click to ask questions. The assistant answers in your business's voice, from a product list you control, and can remember a returning visitor so the conversation picks up where it left off. It's one small piece of software you run yourself, with no third-party tracking and no analytics watching your visitors. The current live version is 'Peter,' a cheerful cartoon-lobster mascot on projectsparks.ai — but the assistant's name, look, personality, and knowledge are all things you set, not things baked in.",
+
+  // Read when a user asks "how do I install this?" This is the real path
+  // the README documents: npm install, then run server.js (or systemd).
+  // No public one-click installer exists — this is the honest, easiest path.
+  "install_steps": [
+    {"step": 1, "instruction": "Get the code onto the machine that will run the assistant (a small always-on computer or server). This is a Node.js program, so you'll need Node 18 or newer installed."},
+    {"step": 2, "instruction": "From the project folder, run 'npm install' once to pull in the two small libraries it needs."},
+    {"step": 3, "instruction": "Make sure the two services it talks to are reachable on the same machine: Rocky's Switch (the model relay) on 127.0.0.1:8100, and a Mnemo Cortex memory instance on 127.0.0.1:50002. Put your OpenRouter API key in ~/.rockys-switch/keys.json so the assistant can reach a language model."},
+    {"step": 4, "instruction": "Start it with 'node server.js'. For an always-on setup, run it under systemd instead: 'systemctl --user start peter-widget.service'."},
+    {"step": 5, "instruction": "Add the assistant to your website by dropping a single <script> tag on the page. It renders itself as a chat bubble — no other page changes needed. (On projectsparks.ai the live widget JS is served from the site itself, not this backend.)"}
+  ],
+
+  // Read when a user asks "does this work with X?" Name + how it connects.
+  // ONLY what the README actually states.
+  "works_with": [
+    {"name": "Your website", "how": "Drop a single <script> tag on any HTML page and the widget renders itself as a chat bubble + overlay. No framework required."},
+    {"name": "Mnemo Cortex (memory)", "how": "Optional per-visitor memory on 127.0.0.1:50002. Memory is OFF by default — a visitor opts in with a toggle in the chat footer; when ON, the assistant recalls prior context and saves a conversation snippet every 3 messages. When OFF, the chat is stateless and nothing is sent to Mnemo."},
+    {"name": "Rocky's Switch (model relay)", "how": "Chat requests go to an OpenAI-compatible endpoint on 127.0.0.1:8100, which relays to the configured upstream provider. Swapping the model is a config change, not a code change."},
+    {"name": "OpenRouter (LLM provider)", "how": "The upstream model provider reached through the relay. The API key is read from ~/.rockys-switch/keys.json."}
+  ],
+
+  // Read when a user asks "how do I customize / add a new assistant?"
+  // This is the engine's whole point: one repo, many personas.
+  "extensibility": "This is a generic engine, not a single hard-wired bot — one repo, many assistants. The customer-facing personality is configuration: the assistant's name, avatar, system prompt, product-knowledge file, and the memory namespace ID that keeps each business's visitors separate. Today the 'Peter' persona lives partly in server.js (the SYSTEM_PROMPT) and partly in a product-knowledge markdown file, so the current build ships as one bound instance. Pulling every persona setting out into a per-customer config file (so a new assistant is a config file, not a new copy of the code) is planned roadmap work and is required before a second persona goes live.",
+
+  // The hidden 80% — things users rarely discover from the docs.
+  "tips": [
+    "Memory is off by default. Visitors choose to turn it on with a toggle in the chat footer — you're not silently storing anyone's conversation.",
+    "Update what the assistant knows by editing its product-knowledge markdown file and restarting the service; the product list loads into its system prompt at startup.",
+    "A visitor can delete everything the assistant remembered about them on demand — there's a wipe action that erases their whole memory namespace, with no soft-delete.",
+    "Every chat is appended to a daily JSONL log file so you can review what people are actually asking. Tail it with: tail -f ~/peter-customer/logs/chat-$(date -u +%Y-%m-%d).log | jq .",
+    "The widget's front-end JS exists in two copies — this repo and the live site copy that visitors actually load. They must stay in sync: if you rename a CSS class, localStorage key, or the global API variable, change BOTH or the live widget breaks.",
+    "Adding a brand-new business assistant is meant to be a new config row, not a new copy of the repo — but that externalization is still roadmap work, so today it ships as one bound instance."
+  ],
+
+  // Recent releases in plain language. There is no CHANGELOG.md in this
+  // repo; these are drawn from package.json + the real git history
+  // (commits a4ff5cb and 7874434). Dates are the commit dates.
+  "changelog": [
+    {"version": "1.1.0", "date": "2026-05-23", "changes": ["Security: updated a bundled dependency (qs 6.15.2) to close a known vulnerability (CVE-2026-8723)."]},
+    {"version": "1.0.0", "date": "2026-05-14", "changes": ["First release of the sparks-widget engine, with the 'Peter' assistant as the first live instance on projectsparks.ai.", "Optional per-visitor memory via Mnemo Cortex, off by default with a visitor opt-in toggle."]}
+  ],
+
+  // Where to get help.
+  "support": {
+    "github_issues": "https://github.com/GuyMannDude/sparks-widget/issues",
+    "homepage": "https://projectsparks.ai",
+    "docs": "https://github.com/GuyMannDude/sparks-widget#readme"
+  },
+
+  "generated_at": "2026-05-30T16:00:00Z",
   "spec_url": "https://github.com/GuyMannDude/mnemo-cortex/blob/master/ROBOT-INFO-SPEC.md"
 }
