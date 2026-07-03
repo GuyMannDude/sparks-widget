@@ -3,7 +3,7 @@
 
   // --- Config ---
   const API_BASE = window.ROCKY_WIDGET_API || "";
-  const ICON_URL = API_BASE + "/rocky-icon.svg";
+  const ICON_URL = "/rocky-icon.svg";
 
   // --- Visitor ID (persistent across sessions) ---
   function getVisitorId() {
