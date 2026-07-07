@@ -8,16 +8,25 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // --- Config ---
 const PORT = 50095;
-const SWITCH_URL = "http://127.0.0.1:8100/v1/chat/completions";
+// Direct to OpenRouter. The customer-facing chat path must not share a
+// router or model toggle with anything else (2026-07-07: the 8100 proxy's
+// stored key died and Peter silently 401'd on every chat).
+const LLM_URL = "https://openrouter.ai/api/v1/chat/completions";
 const MNEMO_URL = "http://127.0.0.1:50002";
 const AGENT_ID = "peter-widget";
-const MODEL = "x-ai/grok-4-fast";
+// grok-4-fast was deprecated by xAI (404 as of 2026-07-07); grok-4.3 is
+// its recommended successor ($1.25/$2.50 per 1M — same class).
+const MODEL = "x-ai/grok-4.3";
 const KNOWLEDGE_DIR = join(process.env.HOME, "peter-customer", "knowledge");
 const MNEMO_DATA_DIR = join(process.env.HOME, ".agentb-portal", "agents");
 
-// Load API key from Rocky's Switch keys
-const keys = JSON.parse(readFileSync(join(process.env.HOME, ".rockys-switch", "keys.json"), "utf8"));
-const API_KEY = keys.openrouter;
+// Read the OpenRouter key per request so a key rotation takes effect
+// without a service restart (the file is tiny; widget traffic is low).
+const KEYS_PATH = join(process.env.HOME, ".rockys-switch", "keys.json");
+function loadApiKey() {
+  return JSON.parse(readFileSync(KEYS_PATH, "utf8")).openrouter;
+}
+loadApiKey(); // fail loud at startup if the keys file is missing/broken
 
 // Load product knowledge from file
 let productKnowledge = "";
@@ -154,10 +163,10 @@ app.post("/api/chat", async (req, res) => {
   const systemMsg = { role: "system", content: SYSTEM_PROMPT + memoryContext };
 
   try {
-    const llmRes = await fetch(SWITCH_URL, {
+    const llmRes = await fetch(LLM_URL, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${API_KEY}`,
+        Authorization: `Bearer ${loadApiKey()}`,
         "Content-Type": "application/json",
         "X-Sparks-Agent": "Peter",
       },
